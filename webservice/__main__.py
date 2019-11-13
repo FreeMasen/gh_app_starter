@@ -51,6 +51,20 @@ async def webhook(request):
 @router.register("installation", action="created")
 async def repo_installation_added(event, gh, *args, **kwargs):
     installation_id = event.data["installation"]["id"]
+    access_token = await utils.get_installation_access_token(gh, installation_id)
+    for repo in event.data:
+        url = f"/repos/{repo['full_name']}/issues"
+        response = await gh.post(
+            url,
+            data={"title": "Mariatta's bot was installed", "body": message},
+            oauth_token=installation_access_token["token"],
+        )
+        issue_url = response["url"]
+        await gh.patch(
+            issue_url,
+            data={"state": "closed"},
+            oauth_token=installation_access_token["token"],
+        )
     pass
 
 
